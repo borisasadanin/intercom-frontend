@@ -6,6 +6,10 @@ import svgr from "vite-plugin-svgr";
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [react(), svgr()],
+  preview: {
+    port: parseInt(process.env.PORT || "4173"),
+    host: "0.0.0.0",
+  },
   test: {
     globals: true,
     environment: "happy-dom",
