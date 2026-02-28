@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { ErrorPage } from "./components/router-error.tsx";
 import { useDevicePermissions } from "./hooks/use-device-permission.ts";
 import { LandingPage } from "./components/landing-page/landing-page.tsx";

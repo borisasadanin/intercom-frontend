@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import { API } from "../../api/api";
 import { getClientId, isAuthenticated, setAuth } from "../../api/auth";
