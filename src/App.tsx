@@ -1,6 +1,6 @@
 import styled from "@emotion/styled";
 import { useEffect, useState } from "react";
-import { BrowserRouter, Routes, Route } from "react-router";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router";
 import { ErrorPage } from "./components/router-error.tsx";
 import { useDevicePermissions } from "./hooks/use-device-permission.ts";
 import { LandingPage } from "./components/landing-page/landing-page.tsx";
@@ -23,6 +23,15 @@ import { ManageProductionsPage } from "./components/manage-productions-page/mana
 import { CreateProductionPage } from "./components/create-production/create-production-page.tsx";
 import { useSetupTokenRefresh } from "./hooks/use-reauth.tsx";
 import { TUserSettings } from "./components/user-settings/types";
+import { RegistrationPage } from "./components/client-registry/registration-page.tsx";
+import { isAuthenticated } from "./api/auth.ts";
+
+function RequireAuth({ children }: { children: React.ReactNode }) {
+  if (!isAuthenticated()) {
+    return <Navigate to="/register" replace />;
+  }
+  return <>{children}</>;
+}
 
 const DisplayBoxPositioningContainer = styled(FlexContainer)`
   justify-content: center;
@@ -138,29 +147,46 @@ const AppContent = ({
             <Routes>
               <>
                 <Route
+                  path="/register"
+                  element={<RegistrationPage />}
+                  errorElement={<ErrorPage />}
+                />
+                <Route
                   path="/"
                   element={
-                    <LandingPage setApiError={() => setApiError(true)} />
+                    <RequireAuth>
+                      <LandingPage setApiError={() => setApiError(true)} />
+                    </RequireAuth>
                   }
                   errorElement={<ErrorPage />}
                 />
                 <Route
                   path="/create-production"
-                  element={<CreateProductionPage />}
+                  element={
+                    <RequireAuth>
+                      <CreateProductionPage />
+                    </RequireAuth>
+                  }
                   errorElement={<ErrorPage />}
                 />
                 <Route
                   path="/manage-productions"
                   element={
-                    <ManageProductionsPage
-                      setApiError={() => setApiError(true)}
-                    />
+                    <RequireAuth>
+                      <ManageProductionsPage
+                        setApiError={() => setApiError(true)}
+                      />
+                    </RequireAuth>
                   }
                   errorElement={<ErrorPage />}
                 />
                 <Route
                   path="/production-calls/production/:productionId/line/:lineId"
-                  element={<CallsPage />}
+                  element={
+                    <RequireAuth>
+                      <CallsPage />
+                    </RequireAuth>
+                  }
                   errorElement={<ErrorPage />}
                 />
                 <Route path="*" element={<NotFound />} />

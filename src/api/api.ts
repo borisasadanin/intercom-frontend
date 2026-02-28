@@ -1,4 +1,5 @@
 import { handleFetchRequest } from "./handle-fetch-request.ts";
+import { getToken } from "./auth.ts";
 
 const API_VERSION = import.meta.env.VITE_BACKEND_API_VERSION ?? "api/v1/";
 const API_URL =
@@ -83,6 +84,84 @@ type TUpdateLineNameOptions = {
   productionId: string;
   lineId: string;
   name: string;
+};
+
+type TRegisterClientOptions = {
+  name: string;
+  role: string;
+  location: string;
+  existingClientId?: string;
+};
+
+export type TRegisterClientResponse = {
+  clientId: string;
+  token: string;
+  name: string;
+  role: string;
+  location: string;
+};
+
+export type TClientProfile = {
+  clientId: string;
+  name: string;
+  role: string;
+  location: string;
+  isOnline: boolean;
+  createdAt: string;
+  lastSeenAt: string;
+};
+
+export type TClientListItem = {
+  clientId: string;
+  name: string;
+  role: string;
+  location: string;
+  isOnline: boolean;
+  lastSeenAt: string;
+};
+
+export type TClientListResponse = {
+  clients: TClientListItem[];
+};
+
+type TUpdateMyProfileOptions = {
+  name?: string;
+  role?: string;
+  location?: string;
+};
+
+export type TCallInitiateResponse = {
+  callId: string;
+  sdpOffer: string;
+  callerId: string;
+  calleeId: string;
+};
+
+export type TCallJoinResponse = {
+  callId: string;
+  sdpOffer: string;
+  callerId: string;
+  calleeId: string;
+};
+
+export type TCallStatusResponse = {
+  callId: string;
+  status: string;
+};
+
+export type TCallActiveItem = {
+  callId: string;
+  callerId: string;
+  calleeId: string;
+  callerName: string;
+  calleeName: string;
+  state: string;
+  direction: string;
+  createdAt: string;
+};
+
+export type TCallActiveResponse = {
+  calls: TCallActiveItem[];
 };
 
 export const API = {
@@ -292,4 +371,163 @@ export const API = {
       })
     );
   },
+
+  registerClient: async ({
+    name,
+    role,
+    location,
+    existingClientId,
+  }: TRegisterClientOptions): Promise<TRegisterClientResponse> =>
+    handleFetchRequest<TRegisterClientResponse>(
+      fetch(`${API_URL}client/register`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name,
+          role,
+          location,
+          ...(existingClientId ? { existingClientId } : {}),
+        }),
+      })
+    ),
+
+  getMyProfile: async (): Promise<TClientProfile> =>
+    handleFetchRequest<TClientProfile>(
+      fetch(`${API_URL}client/me`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      })
+    ),
+
+  updateMyProfile: async ({
+    name,
+    role,
+    location,
+  }: TUpdateMyProfileOptions): Promise<TClientProfile> =>
+    handleFetchRequest<TClientProfile>(
+      fetch(`${API_URL}client/me`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({
+          ...(name !== undefined ? { name } : {}),
+          ...(role !== undefined ? { role } : {}),
+          ...(location !== undefined ? { location } : {}),
+        }),
+      })
+    ),
+
+  getOnlineClients: async (): Promise<TClientListResponse> =>
+    handleFetchRequest<TClientListResponse>(
+      fetch(`${API_URL}client/list`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      })
+    ),
+
+  getClientById: async ({
+    clientId,
+  }: {
+    clientId: string;
+  }): Promise<TClientProfile> =>
+    handleFetchRequest<TClientProfile>(
+      fetch(`${API_URL}client/${clientId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      })
+    ),
+
+  initiateCall: async ({
+    calleeId,
+  }: {
+    calleeId: string;
+  }): Promise<TCallInitiateResponse> =>
+    handleFetchRequest<TCallInitiateResponse>(
+      fetch(`${API_URL}call`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ calleeId }),
+      })
+    ),
+
+  callerAnswer: async ({
+    callId,
+    sdpAnswer,
+  }: {
+    callId: string;
+    sdpAnswer: string;
+  }): Promise<TCallStatusResponse> =>
+    handleFetchRequest<TCallStatusResponse>(
+      fetch(`${API_URL}call/${callId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ sdpAnswer }),
+      })
+    ),
+
+  joinCall: async ({ callId }: { callId: string }): Promise<TCallJoinResponse> =>
+    handleFetchRequest<TCallJoinResponse>(
+      fetch(`${API_URL}call/${callId}/join`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({}),
+      })
+    ),
+
+  calleeAnswer: async ({
+    callId,
+    sdpAnswer,
+  }: {
+    callId: string;
+    sdpAnswer: string;
+  }): Promise<TCallStatusResponse> =>
+    handleFetchRequest<TCallStatusResponse>(
+      fetch(`${API_URL}call/${callId}/answer`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+        body: JSON.stringify({ sdpAnswer }),
+      })
+    ),
+
+  endCall: async ({ callId }: { callId: string }): Promise<TCallStatusResponse> =>
+    handleFetchRequest<TCallStatusResponse>(
+      fetch(`${API_URL}call/${callId}`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      })
+    ),
+
+  getActiveCalls: async (): Promise<TCallActiveResponse> =>
+    handleFetchRequest<TCallActiveResponse>(
+      fetch(`${API_URL}call/active`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${getToken()}`,
+        },
+      })
+    ),
 };

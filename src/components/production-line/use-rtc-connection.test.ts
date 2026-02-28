@@ -77,6 +77,11 @@ const mockState: TGlobalState = {
   userSettings: null,
   apiError: false,
   websocket: null,
+  onlineClients: [],
+  isRegistered: false,
+  p2pCalls: [],
+  activeTalkers: {},
+  wsSendMessage: null,
 };
 
 const wrapper = ({ children }: { children: ReactNode }) =>

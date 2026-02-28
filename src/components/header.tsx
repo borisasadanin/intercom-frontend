@@ -12,6 +12,26 @@ const HeaderWrapper = styled.div`
   width: 100%;
   background: ${backgroundColour};
   margin: 0 0 1rem 0;
+  display: flex;
+  align-items: center;
+`;
+
+const StatusDot = styled.span<{ connected: boolean }>`
+  display: inline-block;
+  width: 0.6rem;
+  height: 0.6rem;
+  border-radius: 50%;
+  background: ${(p) => (p.connected ? "#1db954" : "#cc3333")};
+  margin-right: 0.4rem;
+`;
+
+const ConnectionStatus = styled.div`
+  display: flex;
+  align-items: center;
+  font-size: 1.1rem;
+  color: #aaa;
+  margin-left: auto;
+  padding-right: 1.5rem;
 `;
 
 const HomeButton = styled.button`
@@ -46,7 +66,8 @@ const HomeButton = styled.button`
 
 export const Header: FC = () => {
   const [confirmExitModalOpen, setConfirmExitModalOpen] = useState(false);
-  const [{ calls }, dispatch] = useGlobalState();
+  const [{ calls, wsSendMessage }, dispatch] = useGlobalState();
+  const isConnected = wsSendMessage !== null;
   const navigate = useNavigate();
   const location = useLocation();
   const { playExitSound } = useAudioCue();
@@ -85,6 +106,10 @@ export const Header: FC = () => {
           <HeadsetIcon />
           Open Intercom
         </HomeButton>
+        <ConnectionStatus>
+          <StatusDot connected={isConnected} />
+          {isConnected ? "Connected" : "Disconnected"}
+        </ConnectionStatus>
       </HeaderWrapper>
       {confirmExitModalOpen && (
         <ConfirmationModal

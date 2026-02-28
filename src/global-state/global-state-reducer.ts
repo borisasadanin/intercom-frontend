@@ -15,6 +15,11 @@ export const initialGlobalState: TGlobalState = {
   calls: {},
   apiError: false,
   websocket: null,
+  onlineClients: [],
+  isRegistered: false,
+  p2pCalls: [],
+  activeTalkers: {},
+  wsSendMessage: null,
 };
 
 export const globalReducer: Reducer<TGlobalState, TGlobalStateAction> = (
@@ -132,6 +137,129 @@ export const globalReducer: Reducer<TGlobalState, TGlobalStateAction> = (
           },
         },
       };
+    case "SET_ONLINE_CLIENTS":
+      return { ...state, onlineClients: action.payload };
+    case "CLIENT_CONNECTED":
+      return {
+        ...state,
+        onlineClients: [
+          ...state.onlineClients.filter(
+            (c) => c.clientId !== action.payload.clientId
+          ),
+          action.payload,
+        ],
+      };
+    case "CLIENT_DISCONNECTED": {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { [action.payload]: _talk, ...remainingTalkers } = state.activeTalkers;
+      return {
+        ...state,
+        onlineClients: state.onlineClients.filter(
+          (c) => c.clientId !== action.payload
+        ),
+        activeTalkers: remainingTalkers,
+      };
+    }
+    case "SET_REGISTERED":
+      return { ...state, isRegistered: action.payload };
+    case "CALL_INCOMING": {
+      // Check if already tracking this call
+      if (state.p2pCalls.some((c) => c.callId === action.payload.callId)) return state;
+      return {
+        ...state,
+        p2pCalls: [
+          ...state.p2pCalls,
+          {
+            callId: action.payload.callId,
+            callerId: action.payload.caller.clientId,
+            calleeId: "",
+            callerName: action.payload.caller.name,
+            calleeName: "",
+            direction: "incoming" as const,
+            state: "pending" as const,
+            peerConnection: null,
+            audioElement: null,
+            isTalking: false,
+          },
+        ],
+      };
+    }
+    case "CALL_STARTED": {
+      return {
+        ...state,
+        p2pCalls: state.p2pCalls.map((c) =>
+          c.callId === action.payload.callId
+            ? {
+                ...c,
+                state: "active" as const,
+                callerName: action.payload.callerName,
+                calleeName: action.payload.calleeName,
+              }
+            : c
+        ),
+      };
+    }
+    case "CALL_ENDED": {
+      const call = state.p2pCalls.find((c) => c.callId === action.payload.callId);
+      if (call?.peerConnection) {
+        call.peerConnection.close();
+      }
+      if (call?.audioElement) {
+        call.audioElement.pause();
+        call.audioElement.srcObject = null;
+      }
+      return {
+        ...state,
+        p2pCalls: state.p2pCalls.filter((c) => c.callId !== action.payload.callId),
+      };
+    }
+    case "ADD_P2P_CALL":
+      return {
+        ...state,
+        p2pCalls: [...state.p2pCalls, action.payload],
+      };
+    case "UPDATE_P2P_CALL":
+      return {
+        ...state,
+        p2pCalls: state.p2pCalls.map((c) =>
+          c.callId === action.payload.callId
+            ? { ...c, ...action.payload.updates }
+            : c
+        ),
+      };
+    case "REMOVE_P2P_CALL": {
+      const callToRemove = state.p2pCalls.find((c) => c.callId === action.payload);
+      if (callToRemove?.peerConnection) {
+        callToRemove.peerConnection.close();
+      }
+      if (callToRemove?.audioElement) {
+        callToRemove.audioElement.pause();
+        callToRemove.audioElement.srcObject = null;
+      }
+      return {
+        ...state,
+        p2pCalls: state.p2pCalls.filter((c) => c.callId !== action.payload),
+      };
+    }
+    case "SET_ACTIVE_CALLS":
+      return { ...state, p2pCalls: action.payload };
+    case "TALK_START":
+      return {
+        ...state,
+        activeTalkers: {
+          ...state.activeTalkers,
+          [action.payload.clientId]: action.payload.callIds,
+        },
+      };
+    case "TALK_STOP": {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      const { [action.payload]: _, ...remaining } = state.activeTalkers;
+      return { ...state, activeTalkers: remaining };
+    }
+    case "SET_ACTIVE_TALKERS":
+      return { ...state, activeTalkers: action.payload };
+    case "SET_WS_SEND_MESSAGE":
+      return { ...state, wsSendMessage: action.payload };
     default:
       return state;
   }
