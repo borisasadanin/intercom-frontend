@@ -6,33 +6,14 @@ import { UserSettings } from "../user-settings/user-settings.tsx";
 import { UserSettingsButton } from "./user-settings-button.tsx";
 import { TUserSettings } from "../user-settings/types.ts";
 import { isMobile } from "../../bowser.ts";
-import { ClientList } from "../client-registry/client-list.tsx";
 
-const LandingLayout = styled.div`
-  display: flex;
-  gap: 2rem;
-  align-items: flex-start;
+const PageContent = styled.div`
   padding: 0 2rem 2rem;
-`;
-
-const MainContent = styled.div`
-  flex: 1;
-  min-width: 0;
-`;
-
-const Sidebar = styled.div`
-  flex: 0 0 26rem;
-  padding-top: 1rem;
-
-  @media (max-width: 768px) {
-    display: none;
-  }
 `;
 
 export const LandingPage = ({ setApiError }: { setApiError: () => void }) => {
   const [{ apiError, userSettings }, dispatch] = useGlobalState();
   const [showSettings, setShowSettings] = useState<boolean>(false);
-  const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
 
   useEffect(() => {
     if (apiError) {
@@ -40,6 +21,7 @@ export const LandingPage = ({ setApiError }: { setApiError: () => void }) => {
     }
   }, [apiError, setApiError]);
 
+  // Acquire audio stream and store in global state for P2P calls
   useEffect(() => {
     const constraints: MediaStreamConstraints = {
       audio: userSettings?.audioinput
@@ -50,16 +32,14 @@ export const LandingPage = ({ setApiError }: { setApiError: () => void }) => {
     navigator.mediaDevices
       .getUserMedia(constraints)
       .then((stream) => {
-        setAudioStream(stream);
         dispatch({ type: "SET_AUDIO_STREAM", payload: { stream } });
       })
       .catch(() => {
-        setAudioStream(null);
         dispatch({ type: "SET_AUDIO_STREAM", payload: { stream: null } });
       });
 
     // Don't stop tracks on cleanup — they are shared with active calls
-  }, [userSettings?.audioinput]);
+  }, [userSettings?.audioinput, dispatch]);
 
   const isUserSettingsComplete = (settings: TUserSettings | null) => {
     return (
@@ -82,17 +62,9 @@ export const LandingPage = ({ setApiError }: { setApiError: () => void }) => {
       )) || (
         <>
           <UserSettingsButton onClick={() => setShowSettings(!showSettings)} />
-          <LandingLayout>
-            <MainContent>
-              <ProductionsListContainer />
-            </MainContent>
-            <Sidebar>
-              <ClientList
-                audioStream={audioStream}
-                audioOutput={userSettings?.audiooutput}
-              />
-            </Sidebar>
-          </LandingLayout>
+          <PageContent>
+            <ProductionsListContainer />
+          </PageContent>
         </>
       )}
     </div>

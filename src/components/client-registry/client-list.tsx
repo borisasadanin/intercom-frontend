@@ -160,14 +160,9 @@ const ResultCount = styled.p`
   padding: 0;
 `;
 
-export function ClientList({
-  audioStream,
-  audioOutput,
-}: {
-  audioStream?: MediaStream | null;
-  audioOutput?: string;
-}) {
-  const [{ onlineClients, activeTalkers }] = useGlobalState();
+export function ClientList() {
+  const [{ onlineClients, activeTalkers, audioStream, userSettings }] = useGlobalState();
+  const audioOutput = userSettings?.audiooutput;
   const { initiateCall } = useP2PCalls();
   const myClientId = getClientId();
 
