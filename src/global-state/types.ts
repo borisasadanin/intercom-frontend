@@ -69,4 +69,6 @@ export type TGlobalState = {
   activeTalkers: Record<string, string[]>;
   // M3: WebSocket send function, available once connected
   wsSendMessage: ((message: object) => void) | null;
+  // Pre-acquired audio stream for P2P calls (shared across all pages)
+  audioStream: MediaStream | null;
 };

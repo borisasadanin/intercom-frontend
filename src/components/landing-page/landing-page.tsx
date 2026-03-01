@@ -7,7 +7,6 @@ import { UserSettingsButton } from "./user-settings-button.tsx";
 import { TUserSettings } from "../user-settings/types.ts";
 import { isMobile } from "../../bowser.ts";
 import { ClientList } from "../client-registry/client-list.tsx";
-import { ActiveCallsPanel } from "../p2p-calls/active-calls-panel.tsx";
 
 const LandingLayout = styled.div`
   display: flex;
@@ -31,7 +30,7 @@ const Sidebar = styled.div`
 `;
 
 export const LandingPage = ({ setApiError }: { setApiError: () => void }) => {
-  const [{ apiError, userSettings, wsSendMessage }] = useGlobalState();
+  const [{ apiError, userSettings }, dispatch] = useGlobalState();
   const [showSettings, setShowSettings] = useState<boolean>(false);
   const [audioStream, setAudioStream] = useState<MediaStream | null>(null);
 
@@ -50,9 +49,13 @@ export const LandingPage = ({ setApiError }: { setApiError: () => void }) => {
 
     navigator.mediaDevices
       .getUserMedia(constraints)
-      .then(setAudioStream)
+      .then((stream) => {
+        setAudioStream(stream);
+        dispatch({ type: "SET_AUDIO_STREAM", payload: { stream } });
+      })
       .catch(() => {
         setAudioStream(null);
+        dispatch({ type: "SET_AUDIO_STREAM", payload: { stream: null } });
       });
 
     // Don't stop tracks on cleanup — they are shared with active calls
@@ -87,11 +90,6 @@ export const LandingPage = ({ setApiError }: { setApiError: () => void }) => {
               <ClientList
                 audioStream={audioStream}
                 audioOutput={userSettings?.audiooutput}
-              />
-              <ActiveCallsPanel
-                audioStream={audioStream}
-                audioOutput={userSettings?.audiooutput}
-                sendWsMessage={wsSendMessage ?? undefined}
               />
             </Sidebar>
           </LandingLayout>

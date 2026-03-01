@@ -101,7 +101,9 @@ const PTTButton = styled.button<{ isTalking: boolean }>`
   font-weight: 600;
   font-size: 1.1rem;
   user-select: none;
-  transition: background 0.1s ease;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  transition: background 0.1s ease, transform 0.1s ease;
 
   &:disabled {
     opacity: 0.4;
@@ -110,6 +112,10 @@ const PTTButton = styled.button<{ isTalking: boolean }>`
 
   &:not(:disabled):hover {
     background: ${({ isTalking }) => (isTalking ? "#17a349" : "#555")};
+  }
+
+  &:active {
+    transform: scale(1.08);
   }
 `;
 
@@ -146,11 +152,17 @@ const MasterPTTButton = styled.button<{ isTalking: boolean }>`
   font-weight: 700;
   font-size: 1.3rem;
   user-select: none;
-  transition: background 0.1s ease;
+  touch-action: none;
+  -webkit-touch-callout: none;
+  transition: background 0.1s ease, transform 0.1s ease;
   width: 100%;
 
   &:hover {
     background: ${({ isTalking }) => (isTalking ? "#17a349" : "#555")};
+  }
+
+  &:active {
+    transform: scale(1.08);
   }
 `;
 
@@ -218,11 +230,19 @@ export function ActiveCallsPanel({
             <CallActions>
               <PTTButton
                 isTalking={call.isTalking}
-                onMouseDown={() => togglePTT(call.callId, true)}
-                onMouseUp={() => togglePTT(call.callId, false)}
-                onMouseLeave={() => {
+                onPointerDown={(e) => {
+                  e.preventDefault();
+                  togglePTT(call.callId, true);
+                }}
+                onPointerUp={(e) => {
+                  e.preventDefault();
+                  togglePTT(call.callId, false);
+                }}
+                onPointerLeave={(e) => {
+                  e.preventDefault();
                   if (call.isTalking) togglePTT(call.callId, false);
                 }}
+                onContextMenu={(e) => e.preventDefault()}
                 disabled={call.state !== "active"}
               >
                 PTT
@@ -236,11 +256,19 @@ export function ActiveCallsPanel({
         <MasterPTTSection>
           <MasterPTTButton
             isTalking={isMasterTalking}
-            onMouseDown={() => toggleAllPTT(true)}
-            onMouseUp={() => toggleAllPTT(false)}
-            onMouseLeave={() => {
+            onPointerDown={(e) => {
+              e.preventDefault();
+              toggleAllPTT(true);
+            }}
+            onPointerUp={(e) => {
+              e.preventDefault();
+              toggleAllPTT(false);
+            }}
+            onPointerLeave={(e) => {
+              e.preventDefault();
               if (isMasterTalking) toggleAllPTT(false);
             }}
+            onContextMenu={(e) => e.preventDefault()}
           >
             Talk All
           </MasterPTTButton>

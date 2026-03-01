@@ -82,6 +82,7 @@ const mockState: TGlobalState = {
   p2pCalls: [],
   activeTalkers: {},
   wsSendMessage: null,
+  audioStream: null,
 };
 
 const wrapper = ({ children }: { children: ReactNode }) =>

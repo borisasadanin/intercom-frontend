@@ -13,6 +13,14 @@ export function useStatusWebSocket() {
   const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const connect = useCallback(() => {
+    // Don't open a second connection if one is already open or connecting
+    if (
+      wsRef.current &&
+      wsRef.current.readyState !== WebSocket.CLOSED
+    ) {
+      return;
+    }
+
     const token = getToken();
     if (!token) return;
 

@@ -4,9 +4,9 @@ import styled from "@emotion/styled";
 import { API } from "../../api/api";
 import { getClientId, isAuthenticated, setAuth } from "../../api/auth";
 import { useGlobalState } from "../../global-state/context-provider";
-import { useStatusWebSocket } from "../../hooks/use-status-websocket";
 import {
   FormInput,
+  FormSelect,
   PrimaryButton,
 } from "../form-elements/form-elements";
 
@@ -56,6 +56,25 @@ const StyledFormInput = styled(FormInput)`
   margin: 0 0 0.5rem;
 `;
 
+const StyledFormSelect = styled(FormSelect)`
+  margin: 0 0 0.5rem;
+`;
+
+const ROLES = [
+  "Producer",
+  "Director",
+  "Floor Manager",
+  "Camera Operator",
+  "Sound Engineer",
+  "Lighting",
+  "Graphics",
+  "Reporter",
+  "Anchor",
+  "Editor",
+  "Technical Director",
+  "Guest",
+] as const;
+
 const ErrorText = styled.p`
   color: #f96c6c;
   font-size: 1.4rem;
@@ -83,7 +102,6 @@ const LOCATION_KEY = "intercom2_location";
 export function RegistrationPage() {
   const [, dispatch] = useGlobalState();
   const navigate = useNavigate();
-  const { connect } = useStatusWebSocket();
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [location, setLocation] = useState("");
@@ -113,7 +131,6 @@ export function RegistrationPage() {
         localStorage.setItem(ROLE_KEY, response.role);
         localStorage.setItem(LOCATION_KEY, response.location);
         dispatch({ type: "SET_REGISTERED", payload: true });
-        connect();
         navigate("/");
       } else {
         setError("Registration failed. Please try again.");
@@ -183,16 +200,22 @@ export function RegistrationPage() {
           </FieldWrapper>
           <FieldWrapper>
             <FieldLabel htmlFor="reg-role">Role</FieldLabel>
-            <StyledFormInput
+            <StyledFormSelect
               id="reg-role"
-              type="text"
-              placeholder="e.g. Producer, Reporter"
               value={role}
               onChange={(e) => setRole(e.target.value)}
-              maxLength={100}
               required
               disabled={loading}
-            />
+            >
+              <option value="" disabled>
+                Select role...
+              </option>
+              {ROLES.map((r) => (
+                <option key={r} value={r}>
+                  {r}
+                </option>
+              ))}
+            </StyledFormSelect>
           </FieldWrapper>
           <FieldWrapper>
             <FieldLabel htmlFor="reg-location">Location</FieldLabel>

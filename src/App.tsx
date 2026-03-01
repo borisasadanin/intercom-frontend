@@ -25,6 +25,10 @@ import { useSetupTokenRefresh } from "./hooks/use-reauth.tsx";
 import { TUserSettings } from "./components/user-settings/types";
 import { RegistrationPage } from "./components/client-registry/registration-page.tsx";
 import { isAuthenticated } from "./api/auth.ts";
+import { FloatingCallsPanel } from "./components/p2p-calls/floating-calls-panel";
+import { IncomingCallBanner } from "./components/p2p-calls/incoming-call-banner";
+import { useIncomingCallNotification } from "./hooks/use-incoming-call-notification";
+import { useStatusWebSocket } from "./hooks/use-status-websocket";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   if (!isAuthenticated()) {
@@ -77,11 +81,22 @@ const AppContent = ({
   setApiError,
 }: AppContentProps) => {
   const { setupTokenRefresh } = useSetupTokenRefresh();
+  const { pendingIncomingCalls } = useIncomingCallNotification();
+  const { connect, disconnect } = useStatusWebSocket();
 
   useEffect(() => {
     const cleanup = setupTokenRefresh();
     return () => cleanup();
   }, [setupTokenRefresh]);
+
+  useEffect(() => {
+    if (permission && !denied && !apiError && userSettings && isAuthenticated()) {
+      connect();
+    }
+    return () => {
+      disconnect();
+    };
+  }, [permission, denied, apiError, userSettings, connect, disconnect]);
 
   return (
     <BrowserRouter>
@@ -144,54 +159,58 @@ const AppContent = ({
             </DisplayBoxPositioningContainer>
           )}
           {permission && !denied && !apiError && userSettings && (
-            <Routes>
-              <>
-                <Route
-                  path="/register"
-                  element={<RegistrationPage />}
-                  errorElement={<ErrorPage />}
-                />
-                <Route
-                  path="/"
-                  element={
-                    <RequireAuth>
-                      <LandingPage setApiError={() => setApiError(true)} />
-                    </RequireAuth>
-                  }
-                  errorElement={<ErrorPage />}
-                />
-                <Route
-                  path="/create-production"
-                  element={
-                    <RequireAuth>
-                      <CreateProductionPage />
-                    </RequireAuth>
-                  }
-                  errorElement={<ErrorPage />}
-                />
-                <Route
-                  path="/manage-productions"
-                  element={
-                    <RequireAuth>
-                      <ManageProductionsPage
-                        setApiError={() => setApiError(true)}
-                      />
-                    </RequireAuth>
-                  }
-                  errorElement={<ErrorPage />}
-                />
-                <Route
-                  path="/production-calls/production/:productionId/line/:lineId"
-                  element={
-                    <RequireAuth>
-                      <CallsPage />
-                    </RequireAuth>
-                  }
-                  errorElement={<ErrorPage />}
-                />
-                <Route path="*" element={<NotFound />} />
-              </>
-            </Routes>
+            <>
+              <IncomingCallBanner pendingCalls={pendingIncomingCalls} />
+              <Routes>
+                <>
+                  <Route
+                    path="/register"
+                    element={<RegistrationPage />}
+                    errorElement={<ErrorPage />}
+                  />
+                  <Route
+                    path="/"
+                    element={
+                      <RequireAuth>
+                        <LandingPage setApiError={() => setApiError(true)} />
+                      </RequireAuth>
+                    }
+                    errorElement={<ErrorPage />}
+                  />
+                  <Route
+                    path="/create-production"
+                    element={
+                      <RequireAuth>
+                        <CreateProductionPage />
+                      </RequireAuth>
+                    }
+                    errorElement={<ErrorPage />}
+                  />
+                  <Route
+                    path="/manage-productions"
+                    element={
+                      <RequireAuth>
+                        <ManageProductionsPage
+                          setApiError={() => setApiError(true)}
+                        />
+                      </RequireAuth>
+                    }
+                    errorElement={<ErrorPage />}
+                  />
+                  <Route
+                    path="/production-calls/production/:productionId/line/:lineId"
+                    element={
+                      <RequireAuth>
+                        <CallsPage />
+                      </RequireAuth>
+                    }
+                    errorElement={<ErrorPage />}
+                  />
+                  <Route path="*" element={<NotFound />} />
+                </>
+              </Routes>
+              <FloatingCallsPanel />
+            </>
           )}
         </>
       )}

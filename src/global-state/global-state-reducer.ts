@@ -20,6 +20,7 @@ export const initialGlobalState: TGlobalState = {
   p2pCalls: [],
   activeTalkers: {},
   wsSendMessage: null,
+  audioStream: null,
 };
 
 export const globalReducer: Reducer<TGlobalState, TGlobalStateAction> = (
@@ -260,6 +261,8 @@ export const globalReducer: Reducer<TGlobalState, TGlobalStateAction> = (
       return { ...state, activeTalkers: action.payload };
     case "SET_WS_SEND_MESSAGE":
       return { ...state, wsSendMessage: action.payload };
+    case "SET_AUDIO_STREAM":
+      return { ...state, audioStream: action.payload.stream };
     default:
       return state;
   }

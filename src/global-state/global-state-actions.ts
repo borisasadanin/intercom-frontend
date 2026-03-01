@@ -28,7 +28,8 @@ export type TGlobalStateAction =
   | TTalkStart
   | TTalkStop
   | TSetActiveTalkers
-  | TSetWsSendMessage;
+  | TSetWsSendMessage
+  | TSetAudioStream;
 
 export type TPublishError = {
   type: "ERROR";
@@ -176,4 +177,9 @@ export type TSetActiveTalkers = {
 export type TSetWsSendMessage = {
   type: "SET_WS_SEND_MESSAGE";
   payload: ((message: object) => void) | null;
+};
+
+export type TSetAudioStream = {
+  type: "SET_AUDIO_STREAM";
+  payload: { stream: MediaStream | null };
 };
