@@ -27,13 +27,13 @@ export function useStatusWebSocket() {
 
   const startPolling = useCallback(() => {
     if (pollingTimer.current) return; // already polling
-    console.log("[WS] Starting client list polling fallback");
+    console.log("[WS] Starting heartbeat polling fallback");
 
     const poll = async () => {
       try {
         const token = getToken();
         if (!token) return;
-        const response = await API.getOnlineClients();
+        const response = await API.sendHeartbeat();
         const clients: TClientInfo[] = (response.clients || []).map((c) => ({
           clientId: c.clientId,
           name: c.name,
@@ -42,7 +42,7 @@ export function useStatusWebSocket() {
         }));
         dispatch({ type: "SET_ONLINE_CLIENTS", payload: clients });
       } catch (e) {
-        console.warn("[WS] Polling failed:", e);
+        console.warn("[WS] Heartbeat polling failed:", e);
       }
     };
 

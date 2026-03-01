@@ -433,6 +433,17 @@ export const API = {
       })
     ),
 
+  sendHeartbeat: async (): Promise<TClientListResponse> =>
+    handleFetchRequest<TClientListResponse>(
+      fetch(`${API_URL}client/heartbeat`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${getToken()}`,
+        },
+      })
+    ),
+
   getClientById: async ({
     clientId,
   }: {
