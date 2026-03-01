@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useGlobalState } from "../global-state/context-provider";
-import { getToken } from "../api/auth";
+import { clearAuth, getToken } from "../api/auth";
 import { TClientInfo } from "../global-state/types";
 import { API } from "../api/api";
 
@@ -192,8 +192,18 @@ export function useStatusWebSocket() {
       wsConnected.current = false;
       wsRef.current = null;
       dispatch({ type: "SET_WS_SEND_MESSAGE", payload: null });
-      // Don't reconnect on intentional auth failure or replacement
-      if (event.code === 4001 || event.code === 4002) return;
+      // Duplicate connection replaced — skip cleanup (handled by new connection)
+      if (event.code === 4002) return;
+
+      // Auth failure — token is invalid or expired, redirect to re-register
+      if (event.code === 4001) {
+        console.warn(
+          "[WS] Auth failed (code 4001) — token expired or invalid, redirecting to register"
+        );
+        clearAuth();
+        window.location.href = "/register";
+        return;
+      }
       if (reconnectCount.current < WS_MAX_RECONNECTS) {
         reconnectCount.current++;
         console.log(
