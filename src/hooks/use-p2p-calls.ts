@@ -24,12 +24,14 @@ async function setupPeerConnection(
   }
 
   // Handle remote audio tracks
-  pc.ontrack = ({ streams }) => {
-    const stream = streams[0];
-    if (stream && stream.getAudioTracks().length > 0) {
+  pc.ontrack = (event) => {
+    const stream = event.streams[0] ?? new MediaStream([event.track]);
+    if (stream.getAudioTracks().length > 0) {
       const audio = new Audio();
       audio.srcObject = stream;
       audio.autoplay = true;
+      // Force play in case autoplay is blocked
+      audio.play().catch(() => {});
       if (audioOutputDeviceId && "setSinkId" in audio) {
         (audio as HTMLAudioElement & { setSinkId: (id: string) => Promise<void> })
           .setSinkId(audioOutputDeviceId)
